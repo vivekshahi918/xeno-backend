@@ -3,17 +3,14 @@ require('dotenv').config();
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
-  logging: false, 
+  logging: false,
   dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false
-    }
+    ssl: { require: true, rejectUnauthorized: false }
   }
 });
 
 const Tenant = sequelize.define('Tenant', {
-  id: { type: DataTypes.STRING, primaryKey: true }, 
+  id: { type: DataTypes.STRING, primaryKey: true },
   shopDomain: { type: DataTypes.STRING, allowNull: false },
   accessToken: { type: DataTypes.STRING, allowNull: false }
 });
@@ -27,26 +24,30 @@ const Customer = sequelize.define('Customer', {
   tenantId: DataTypes.STRING
 });
 
-
 const Order = sequelize.define('Order', {
   shopifyId: { type: DataTypes.BIGINT, unique: true },
   totalPrice: DataTypes.FLOAT,
-  createdAtDate: DataTypes.DATE,
+  createdAtDate: DataTypes.DATEONLY, 
   tenantId: DataTypes.STRING
 });
 
-
-Tenant.hasMany(Customer, { foreignKey: 'tenantId' });
-Tenant.hasMany(Order, { foreignKey: 'tenantId' });
+const Product = sequelize.define('Product', {
+  shopifyId: { type: DataTypes.BIGINT, unique: true },
+  title: DataTypes.STRING,
+  category: DataTypes.STRING,
+  price: DataTypes.FLOAT,
+  stock: DataTypes.INTEGER,
+  tenantId: DataTypes.STRING
+});
 
 const initDB = async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync({ alter: true }); 
+    await sequelize.sync({ force: true });
     console.log('Database Connected & Synced');
   } catch (error) {
     console.error('DB Connection Error:', error);
   }
 };
 
-module.exports = { sequelize, Tenant, Customer, Order, initDB };
+module.exports = { sequelize, Tenant, Customer, Order, Product, initDB };
